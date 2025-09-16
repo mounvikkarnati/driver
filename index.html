@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punjab State Transit Driver Portal</title>
+    <link rel="icon" href="image.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="loginPage">
+        <div class="login-logo">
+            <img src="image.png" alt="Government of Punjab Logo">
+            <div style="text-align: left;">
+                <h2 style="margin: 0; color: #fff;">State Government of Punjab</h2>
+                <p style="margin: 0; color: #fff;">Driver Portal</p>
+            </div>
+        </div>
+        <div class="login-container">
+            <div class="login-header">
+                <h1>State Transport Department</h1>
+                <p>Driver Portal Login</p>
+            </div>
+            <input type="text" id="username" placeholder="Username" data-translate-placeholder="username">
+            <input type="password" id="password" placeholder="Password" data-translate-placeholder="password">
+            <button onclick="login()">
+                <span class="btn-spinner" id="loginSpinner"></span>
+                Login
+            </button>
+            <p id="loginMsg"></p>
+        </div>
+    </div>
+
+    <div id="mainApp">
+        <header>
+            <div class="header-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="logo">
+                    <img src="image.png" alt="Punjab Government Logo" class="header-logo">
+                    <span id="headerTitle">State Transport Department, Government of Punjab, India</span>
+                    <p id="headerSubtitle">Driver Portal</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="language-selector">
+                    <button class="language-button" id="languageButton">
+                        <i class="fas fa-globe"></i>
+                        <span id="currentLanguage">English</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="language-options" id="languageOptions">
+                        <div class="language-option" data-lang="en">English</div>
+                        <div class="language-option" data-lang="hi">Hindi</div>
+                        <div class="language-option" data-lang="pa">Punjabi</div>
+                    </div>
+                </div>
+                <button class="notifications" id="notificationsButton">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </div>
+        </header>
+      
+        <div class="alert-banner" id="alertBanner">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="alertText">Alert: Accident on MG Road. Expect delays of 15 minutes. Please take alternate route.</span>
+        </div>
+
+        <div class="container">
+            <nav class="sidebar" id="sidebar">
+                <div>
+                    <div class="profile">
+                        <div class="profile-name" id="profileName">Loading...</div>
+                        <div class="profile-route" id="profileRoute">Route 101 - Amritsar to Ludhiana</div>
+                    </div>
+                    <ul class="nav-menu">
+                        <li class="nav-item active" data-page="dashboard">
+                            <i class="fas fa-home"></i>
+                            <span data-translate="dashboard">Dashboard</span>
+                        </li>
+                        <li class="nav-item" data-page="route">
+                            <i class="fas fa-route"></i>
+                            <span data-translate="routeDetails">Route Details</span>
+                        </li>
+                        <li class="nav-item" data-page="navigation">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span data-translate="navigation">Navigation</span>
+                        </li>
+                        <li class="nav-item" data-page="ticketing">
+                            <i class="fas fa-ticket-alt"></i>
+                            <span data-translate="ticketing">Ticketing</span>
+                        </li>
+                        <li class="nav-item" data-page="settings">
+                            <i class="fas fa-cog"></i>
+                            <span data-translate="settings">Settings</span>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <li class="nav-item" id="logoutButton">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span data-translate="logout">Logout</span>
+                    </li>
+                </div>
+            </nav>
+
+            <main class="main-content" id="mainContent">
+                <div class="card-grid" id="dashboardCards">
+                    <div class="card" id="busInfoCard">
+                        <div class="card-header">
+                            <i class="fas fa-bus"></i>
+                            <span data-translate="busInfo">Bus Information</span>
+                        </div>
+                        <div class="bus-details">
+                            <p><strong data-translate="busId">Bus ID:</strong> <span id="busId">Loading...</span></p>
+                            <p><strong data-translate="model">Model:</strong> TATA Starbus Electric</p>
+                            <p><strong data-translate="capacity">Capacity:</strong> 40 <span data-translate="passengers">passengers</span></p>
+                        </div>
+                    </div>
+                    <div class="card" id="passengerCountCard">
+                        <div class="card-header">
+                            <i class="fas fa-users"></i>
+                            <span data-translate="passengerCount">Passenger Count</span>
+                        </div>
+                        <div class="stats">
+                            <div class="stat">
+                                <div class="stat-value" id="passengerCount">0</div>
+                                <div class="stat-label" data-translate="current">Current</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">40</div>
+                                <div class="stat-label" data-translate="maxCapacity">Max Capacity</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value" id="occupancyPercentage">0%</div>
+                                <div class="stat-label" data-translate="occupancy">Occupancy</div>
+                            </div>
+                        </div>
+                        <div class="occupancy-controls">
+                            <button class="occupancy-btn" onclick="updatePassengerCount(-1)">
+                                <i class="fas fa-minus"></i> 1
+                            </button>
+                            <button class="occupancy-btn" onclick="updatePassengerCount(1)">
+                                <i class="fas fa-plus"></i> 1
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" id="shiftTrackingCard">
+                        <div class="card-header">
+                            <i class="fas fa-clock"></i>
+                            <span data-translate="shiftTracking">Shift Tracking</span>
+                        </div>
+                        <div class="shift-info">
+                            <div class="shift-time">
+                                <div class="time-label" data-translate="startTime">Start Time</div>
+                                <div class="time-value">07:00 AM</div>
+                            </div>
+                            <div class="shift-time">
+                                <div class="time-label" data-translate="elapsed">Elapsed</div>
+                                <div class="time-value" id="elapsedTime">0h 0m</div>
+                            </div>
+                            <div class="shift-time">
+                                <div class="time-label" data-translate="endTime">End Time</div>
+                                <div class="time-value">04:00 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" id="liveLocationCard">
+                    <div class="card-header">
+                        <i class="fas fa-map"></i>
+                        <span data-translate="liveBusLocation">Live Bus Location</span> - <span id="routeName">Amritsar to Ludhiana</span>
+                    </div>
+                    <div id="map" class="vijayawada-map"></div>
+                </div>
+                <div class="card" id="upcomingStopsCard">
+                    <div class="card-header">
+                        <i class="fas fa-list-ol"></i>
+                        <span data-translate="upcomingStops">Upcoming Stops</span>
+                    </div>
+                    <ul class="stop-list" id="stopList">
+                        <li class="stop-item">
+                            <div class="stop-time">09:00 AM</div>
+                            <div class="stop-name">Golden Temple, Amritsar</div>
+                            <div class="stop-status status-current" data-translate="current">Current</div>
+                        </li>
+                        <li class="stop-item">
+                            <div class="stop-time">09:30 AM</div>
+                            <div class="stop-name">Jalandhar Bus Stand</div>
+                            <div class="stop-status status-upcoming" data-translate="next">Next</div>
+                        </li>
+                        <li class="stop-item">
+                            <div class="stop-time">10:15 AM</div>
+                            <div class="stop-name">Phagwara</div>
+                            <div class="stop-status status-upcoming" data-translate="upcoming">Upcoming</div>
+                        </li>
+                        <li class="stop-item">
+                            <div class="stop-time">11:00 AM</div>
+                            <div class="stop-name">Ludhiana Bus Terminal</div>
+                            <div class="stop-status status-upcoming" data-translate="upcoming">Upcoming</div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card" id="ticketingSection">
+                    <div class="card-header">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span data-translate="generateTicket">Generate Ticket</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="passengerName" data-translate="passengerName">Passenger Name</label>
+                        <input type="text" id="passengerName" data-translate-placeholder="enterPassengerName">
+                    </div>
+                    <div class="form-group">
+                        <label for="fromDestination" data-translate="from">From</label>
+                        <select id="fromDestination">
+                            <option value="" data-translate="selectBoarding">Select boarding point</option>
+                            <option value="Golden Temple, Amritsar">Golden Temple, Amritsar</option>
+                            <option value="Jalandhar Bus Stand">Jalandhar Bus Stand</option>
+                            <option value="Phagwara">Phagwara</option>
+                            <option value="Ludhiana Bus Terminal">Ludhiana Bus Terminal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="toDestination" data-translate="to">To</label>
+                        <select id="toDestination">
+                            <option value="" data-translate="selectDestination">Select destination</option>
+                            <option value="Golden Temple, Amritsar">Golden Temple, Amritsar</option>
+                            <option value="Jalandhar Bus Stand">Jalandhar Bus Stand</option>
+                            <option value="Phagwara">Phagwara</option>
+                            <option value="Ludhiana Bus Terminal">Ludhiana Bus Terminal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-translate="paymentMethod">Payment Method</label>
+                        <div class="payment-options">
+                            <div class="payment-option" data-method="cash">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <div data-translate="cash">Cash</div>
+                            </div>
+                            <div class="payment-option" data-method="upi">
+                                <i class="fas fa-mobile-alt"></i>
+                                <div>UPI</div>
+                            </div>
+                            <div class="payment-option" data-method="card">
+                                <i class="fas fa-credit-card"></i>
+                                <div data-translate="card">Card</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="action-btn" id="generateTicket">
+                        <i class="fas fa-ticket-alt"></i> <span data-translate="generateTicket">Generate Ticket</span>
+                    </button>
+                    <div class="ticket" id="ticket">
+                        <div class="ticket-header">
+                            <h2 data-translate="busTravelTicket">Bus Travel Ticket</h2>
+                        </div>
+                        <div class="ticket-details">
+                            <div><strong data-translate="ticketId">Ticket ID:</strong> <span id="ticketId">BT-12345</span></div>
+                            <div><strong data-translate="date">Date:</strong> <span id="ticketDate">01/09/2023</span></div>
+                            <div><strong data-translate="passenger">Passenger:</strong> <span id="ticketPassenger">John Doe</span></div>
+                            <div><strong data-translate="from">From:</strong> <span id="ticketFrom">Golden Temple, Amritsar</span></div>
+                            <div><strong data-translate="to">To:</strong> <span id="ticketTo">Ludhiana Bus Terminal</span></div>
+                            <div><strong data-translate="busNo">Bus No:</strong> <span id="ticketBus">Loading...</span></div>
+                            <div><strong data-translate="fare">Fare:</strong> ₹<span id="ticketFare">25.00</span></div>
+                            <div><strong data-translate="payment">Payment:</strong> <span id="ticketPayment">UPI</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" id="settingsControls">
+                    <div class="card-header">
+                        <i class="fas fa-cog"></i>
+                        <span data-translate="busSettings">Bus Settings</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="busNumber" data-translate="busNumber">Bus Number</label>
+                        <input type="text" id="busNumber" data-translate-placeholder="enterBusNumber">
+                    </div>
+                    <div class="form-group">
+                        <label for="routeSelect" data-translate="selectRoute">Select Route</label>
+                        <select id="routeSelect">
+                            <option value="route1">Route 101: Amritsar to Ludhiana</option>
+                            <option value="route2">Route 102: Chandigarh to Patiala</option>
+                            <option value="route3">Route 103: Jalandhar to Amritsar</option>
+                        </select>
+                    </div>
+                    <div class="trip-controls">
+                        <button class="btn-start" id="startTrip">
+                            <span class="btn-spinner" id="startTripSpinner"></span>
+                            <i class="fas fa-play"></i> <span data-translate="startTrip">Start Trip</span>
+                        </button>
+                        <button class="btn-stop" id="endTrip" disabled>
+                            <span class="btn-spinner" id="endTripSpinner"></span>
+                            <i class="fas fa-stop"></i> <span data-translate="endTrip">End Trip</span>
+                        </button>
+                    </div>
+                    <div class="driver-status">
+                        <div class="status-indicator" id="statusIndicator"></div>
+                        <span id="statusText" data-translate="tripNotStarted">Trip not started</span>
+                    </div>
+                    <div class="gps-status" id="gpsStatus">
+                        <div class="icon"><i class="fas fa-satellite-dish"></i></div>
+                        <div class="text" data-translate="gpsInactive">GPS: Inactive</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div class="sos-button" id="sosButton">
+            <i class="fas fa-exclamation"></i>
+        </div>
+
+        <div class="modal" id="sosModal">
+            <div class="modal-content">
+                <h2 class="modal-title" data-translate="emergencyAlert">EMERGENCY ALERT</h2>
+                <p data-translate="sosMessage1">You are about to send an emergency alert to authorities. This should only be used in case of a real emergency.</p>
+                <p data-translate="sosMessage2">Are you sure you want to proceed?</p>
+                <div class="modal-buttons">
+                    <button class="modal-btn btn-cancel" id="cancelSOS" data-translate="cancel">Cancel</button>
+                    <button class="modal-btn btn-confirm" id="confirmSOS" data-translate="confirmSOS">Confirm SOS</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="notificationsModal">
+            <div class="modal-content">
+                <h2 class="modal-title" data-translate="notifications">Notifications</h2>
+                <div id="notificationsList">
+                    <div class="notification-item">
+                        <div class="notification-time">10:15 AM</div>
+                        <div class="notification-text" data-translate="notification1">Accident reported on MG Road. Expect delays.</div>
+                    </div>
+                    <div class="notification-item">
+                        <div class="notification-time">09:45 AM</div>
+                        <div class="notification-text" data-translate="notification2">Weather alert: High temperatures expected today.</div>
+                    </div>
+                    <div class="notification-item">
+                        <div class="notification-time">09:30 AM</div>
+                        <div class="notification-text" data-translate="notification3">Your shift has started. Have a safe drive!</div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-btn btn-cancel" id="closeNotifications" data-translate="close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <script src="translations.json"></script>
+    <script src="script.js"></script>
+</body>
+</html>
